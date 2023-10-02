@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 
 exports.generateToken = (userID) => {
@@ -19,4 +20,5 @@ exports.comparePassword = async (password, hashedPassword) => {
 exports.verifyToken = (token) => {
     return jwt.verify(token, process.env.JWT_SECRET);
 }
+
 

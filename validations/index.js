@@ -3,5 +3,6 @@ module.exports= {
     validateEditBlog:require('./editblog'),
     validateCreateUser:require('./createuser'),
     validatEditUser:require('./edituser'),
-    validateLogin:require('./loginuser')
+    validateLogin:require('./loginuser'),
+    validateChangePass:require('./changepassward')
 }

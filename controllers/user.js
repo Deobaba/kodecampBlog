@@ -2,7 +2,7 @@ const usermodel = require('../models/user');
 const asyncHandler = require('../middlewares/async');
 const {comparePassword} = require('../utils/authenticationTools');
 const {ErrorResponse,sendResponseToken} = require('../utils');  // import the ErrorResponse class and sendresposnetoken function
-const { validateCreateUser, validatEditUser ,validateLogin} = require('../validations');  // import the validation functions
+const { validateCreateUser, validatEditUser ,validateLogin,validateChangePass} = require('../validations');  // import the validation functions
 
 // create a new user
 exports.createuser = asyncHandler(async (req, res, next) => {
@@ -81,10 +81,15 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
 
 
 exports.changePassword = asyncHandler(async (req, res, next) => {
-    const { oldPassword, newPassword } = req.body;  // get the old password and new password from the request body
+    const { oldPassword, newPassword } = req.body;   // get the old password and new password from the request body
+
     if(!oldPassword || !newPassword){
         return next(new ErrorResponse(`Please provide an old password and new password`, 400));
     }  // if there is no old password or new password, return a 400 error
+
+    const { error } = validateChangePass(req.body);  // validate the user data
+    
+    if (error) return res.status(400).send(error.details[0].message);  // if there is an error, return the error message
 
     const user = await usermodel.findById(req.params.id).select('+password');  // find the user by id and select the password
     if (!user) {
@@ -99,3 +104,24 @@ exports.changePassword = asyncHandler(async (req, res, next) => {
     await user.save();  // save the user to the database
     sendResponseToken(user.id, 200, res);  // send the response token
 });
+
+
+exports.forgotPassword = asyncHandler(async(req,res,next)=>{
+    const {email} = req.body
+
+    if(!email){
+        return next(new ErrorResponse('input email', 400))
+    }
+
+    const user = await usermodel.findOne({email})
+
+    if(!user){
+        return next(new ErrorResponse(`user with ${email} do not exist`,400))
+    }
+
+    const resetToken = user.getResetPasswordToken()
+    await user.save({validateBeforeSave:false})
+    
+
+})
+
