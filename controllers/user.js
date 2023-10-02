@@ -1,7 +1,7 @@
 const usermodel = require('../models/user');
 const asyncHandler = require('../middlewares/async');
 const {comparePassword} = require('../utils/authenticationTools');
-const {ErrorResponse,sendResponseToken} = require('../utils');  // import the ErrorResponse class and sendresposnetoken function
+const {ErrorResponse,sendResponseToken,sendMail} = require('../utils');  // import the ErrorResponse class and sendresposnetoken function
 const { validateCreateUser, validatEditUser ,validateLogin,validateChangePass} = require('../validations');  // import the validation functions
 
 // create a new user
@@ -121,7 +121,54 @@ exports.forgotPassword = asyncHandler(async(req,res,next)=>{
 
     const resetToken = user.getResetPasswordToken()
     await user.save({validateBeforeSave:false})
-    
+    const message = `this is your resest token ${resetToken}`
+
+    try{
+        await sendMail({
+            email: superAdmin.email,
+            subject: "Password reset token",
+            message
+          })
+
+    }catch(err){
+
+        console.log(err)
+        user.resetPasswordToken = undefined
+        user.resetPasswordExpire= undefined
+        await user.save({ validateBeforeSave: false });
+        return next(new ErrorResponse("Email could not be sent", 500));
+    }
+
+
+})
+
+exports.resetpassword = asyncHandler(async(req,res,next)=>{
+
+    const {resetToken, newPassword} = req.body
+
+    if(!resetToken || !newPassword){
+        return next(new ErrorResponse('invalid credentials',404))
+    }
+
+    const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  const user = await usermodel.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if(!user){
+    return next(new ErrorResponse(`Invalid token`, 400));
+  }
+
+  user.password = newPassword
+  user.resetPasswordToken = undefined
+  user.resetPasswordExpire= undefined
+  user.save()
+
+  sendResponseToken(user.id,200,res)
 
 })
 
