@@ -22,7 +22,7 @@ app.use(cookieParser());
 
 
 
-errorHandler();
+app.use(errorHandler)
 
 
 const port = process.env.PORT;

@@ -4,5 +4,6 @@ module.exports= {
     validateCreateUser:require('./createuser'),
     validatEditUser:require('./edituser'),
     validateLogin:require('./loginuser'),
-    validateChangePass:require('./changepassward')
+    validateChangePass:require('./changepassward'),
+    validateForgotpass:require('./forgotpass')
 }

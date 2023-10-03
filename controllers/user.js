@@ -2,14 +2,17 @@ const usermodel = require('../models/user');
 const asyncHandler = require('../middlewares/async');
 const {comparePassword} = require('../utils/authenticationTools');
 const {ErrorResponse,sendResponseToken,sendMail} = require('../utils');  // import the ErrorResponse class and sendresposnetoken function
-const { validateCreateUser, validatEditUser ,validateLogin,validateChangePass} = require('../validations');  // import the validation functions
+const { validateCreateUser, validatEditUser ,validateLogin,validateChangePass,validateForgotpass} = require('../validations');  // import the validation functions
 
 // create a new user
 exports.createuser = asyncHandler(async (req, res, next) => {
 
         req.body.createdAt = new Date();  // add the createdAt property to the request body
         const { error } = validateCreateUser(req.body);  // validate the user data
-        if (error) return res.status(400).send(error.details[0].message);  // if there is an error, return the error message
+        if (error) {
+            // Validation failed, return error response
+            return res.status(400).json({ success: false, error: error.details });
+          }  // if there is an error, return the error message
 
         const user = new usermodel(req.body);  // create a new user
 
@@ -24,7 +27,10 @@ exports.editUser = asyncHandler(async (req, res, next) => {
 
     const { error } = validatEditUser(req.body);  // validate the user data
     
-    if (error) return res.status(400).send(error.details[0].message);  // if there is an error, return the error message
+    if (error) {
+        // Validation failed, return error response
+        return res.status(400).json({ success: false, error: error.details });
+      }  // if there is an error, return the error message
 
     const user = await usermodel.findByIdAndUpdate(req.params.id, req.body, { new: true });  // find the user by id and update the user
     if (!user) {
@@ -64,7 +70,10 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
     }  // if there is no email or password, return a 400 error
 
     const { error } = validateLogin(req.body);  // validate the user data
-    if (error) return res.status(400).send(error.details[0].message);  // if there is an error, return the error message
+    if (error) {
+        // Validation failed, return error response
+        return res.status(400).json({ success: false, error: error.details });
+      } // if there is an error, return the error message
 
     const user = await usermodel.findOne({ email: email }).select('+password');  // find the user by email and select the password
     if (!user) {
@@ -89,7 +98,10 @@ exports.changePassword = asyncHandler(async (req, res, next) => {
 
     const { error } = validateChangePass(req.body);  // validate the user data
     
-    if (error) return res.status(400).send(error.details[0].message);  // if there is an error, return the error message
+    if (error) {
+        // Validation failed, return error response
+        return res.status(400).json({ success: false, error: error.details });
+      } // if there is an error, return the error message
 
     const user = await usermodel.findById(req.params.id).select('+password');  // find the user by id and select the password
     if (!user) {
@@ -111,7 +123,15 @@ exports.forgotPassword = asyncHandler(async(req,res,next)=>{
 
     if(!email){
         return next(new ErrorResponse('input email', 400))
+
     }
+
+    const {error}= validateForgotpass(req.body)
+
+     if (error){
+        // Validation failed, return error response
+        return res.status(400).json({ success: false, error: error.details });
+      }
 
     const user = await usermodel.findOne({email})
 
@@ -170,5 +190,19 @@ exports.resetpassword = asyncHandler(async(req,res,next)=>{
 
   sendResponseToken(user.id,200,res)
 
+})
+
+
+
+exports.getAllUser = asyncHandler(async(req,res,next)=>{
+    const user = await usermodel.find({})
+    if(!user){
+        return next(new ErrorResponse('no user',404))
+    }
+
+    res.status(200).json({
+        success:true,
+        data:users
+    })
 })
 
