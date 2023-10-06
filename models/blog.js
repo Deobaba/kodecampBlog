@@ -1,5 +1,6 @@
 
 const mongoose = require('mongoose')
+const slugify = require('slugify')
 
 const blogSchema = new mongoose.Schema({
     title:{
@@ -11,6 +12,7 @@ const blogSchema = new mongoose.Schema({
         type: String,
         required:[true,'description can not be blank']
     },
+    slug: String,
     image:{
         type: String,
     },
@@ -23,13 +25,19 @@ const blogSchema = new mongoose.Schema({
         default:0
     },
     tags: String,
-    body:{
+    content:{
         type: String,
         required:[true,'body cant be blank']
     },
     createdAt: { type: Date, default: Date.now},
     updatedAt: { type: Date},
 }, {timestamps:true})
+
+
+blogSchema.pre('save', function(next){
+    this.slug = slugify(this.title, {lower:true})
+    next()
+})
 
 const blogModel = mongoose.model('Blog', blogSchema)
 

@@ -10,15 +10,23 @@ const cookieParser = require('cookie-parser');
 dotenv.config({ path: './config/.env' });
 
 
-
-
+connectDB();
 
 const app = express();
 
-connectDB();
+// routes
+
+const userRouter = require('./routes/user')
+const blogRouter = require('./routes/blog')
+
+
 
 app.use(express.json());
 app.use(cookieParser());
+
+
+app.use('/user',userRouter)
+app.use('/blog',blogRouter)
 
 
 

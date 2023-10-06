@@ -1,11 +1,13 @@
 const usermodel = require('../models/user');
-const asyncHandler = require('../middlewares/async');
-const {comparePassword} = require('../utils/authenticationTools');
-const {ErrorResponse,sendResponseToken,sendMail} = require('../utils');  // import the ErrorResponse class and sendresposnetoken function
+const asyncHandler = require('../middleware/async');
+const {comparePassword, hashPassword} = require('../utils/authenticationTools');
+const {ErrorResponse,sendResponseToken,sendMail} = require('../utils/index');  // import the ErrorResponse class and sendresposnetoken function
+// const ErrorResponse = require('../utils/errorResponse')
 const { validateCreateUser, validatEditUser ,validateLogin,validateChangePass,validateForgotpass} = require('../validations');  // import the validation functions
 
 // create a new user
 exports.createuser = asyncHandler(async (req, res, next) => {
+    // console.log(req.body)
 
         req.body.createdAt = new Date();  // add the createdAt property to the request body
         const { error } = validateCreateUser(req.body);  // validate the user data
@@ -13,6 +15,12 @@ exports.createuser = asyncHandler(async (req, res, next) => {
             // Validation failed, return error response
             return res.status(400).json({ success: false, error: error.details });
           }  // if there is an error, return the error message
+
+          console.log(req.body)
+        
+        const newPassword = await hashPassword(req.body.password)
+
+        req.body.password = newPassword
 
         const user = new usermodel(req.body);  // create a new user
 
@@ -112,7 +120,9 @@ exports.changePassword = asyncHandler(async (req, res, next) => {
     if (!validate) {
         return next(new ErrorResponse(`Invalid password`, 401));
     }  // if the password does not match, return a 401 error
-    user.password = newPassword;  // set the new password
+
+    const hashedNewPassword = await hashPassword(newPassword)
+    user.password = hashedNewPassword;  // set the new password
     await user.save();  // save the user to the database
     sendResponseToken(user.id, 200, res);  // send the response token
 });
@@ -138,6 +148,7 @@ exports.forgotPassword = asyncHandler(async(req,res,next)=>{
     if(!user){
         return next(new ErrorResponse(`user with ${email} do not exist`,400))
     }
+    
 
     const resetToken = user.getResetPasswordToken()
     await user.save({validateBeforeSave:false})
@@ -145,13 +156,14 @@ exports.forgotPassword = asyncHandler(async(req,res,next)=>{
 
     try{
         await sendMail({
-            email: superAdmin.email,
+            email: user.email,
             subject: "Password reset token",
             message
           })
 
     }catch(err){
 
+        console.log(err)
         console.log(err)
         user.resetPasswordToken = undefined
         user.resetPasswordExpire= undefined
@@ -202,7 +214,7 @@ exports.getAllUser = asyncHandler(async(req,res,next)=>{
 
     res.status(200).json({
         success:true,
-        data:users
+        data:user
     })
 })
 

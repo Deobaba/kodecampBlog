@@ -7,7 +7,8 @@ const blogValidation = joi.object({
     author: joi.string().required(),
     read_count: joi.number(),
     tags:joi.string().min(2).required(),
-    body:joi.string().required()
+    content:joi.string().required(),
+    createdAt: joi.date().required(),
 
 }) 
 

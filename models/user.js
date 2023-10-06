@@ -35,16 +35,7 @@ const userSchema = new mongoose.Schema({
 
 })
 
-// userSchema.pre(
-//     'save',
-//     async function (next) {
-//         const user = this;
-//         const hash = await bcrypt.hash(this.password, 10);
 
-//         this.password = hash;
-//         next();
-//     }
-// );
 
 userSchema.methods.getResetPasswordToken = function() {
     // Generate token
