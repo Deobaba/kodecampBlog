@@ -33,12 +33,15 @@ exports.createBlog = asyncHandler(async(req,res,next)=>{
 
 exports.editBlog = asyncHandler(async(req,res,next)=>{
 
+    req.body.updatedAt = new Date(); 
+
     const {error} = validateEditBlog(req.body)
     if (error) {
         // Validation failed, return error response
         return res.status(400).json({ success: false, error: error.details });
       }
     let blog = await blogModel.findById(req.params.id)
+    console.log(blog)
 
     if(!blog){
         return next (new ErrorResponse('no blog with this Id',404))
@@ -46,14 +49,14 @@ exports.editBlog = asyncHandler(async(req,res,next)=>{
     if(blog.author != req.user.id){
         return next (new ErrorResponse('You are not authorized to edit this blog',401))
     }
-     blog = await blogModel.findOneAndUpdate(req.params.id, req.body, {
+     blog = await blogModel.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
-        runValidators: true
+        runValidators: false
       });
 
     res.status(200).json({
         success:true,
-        data:blogg
+        data:blog
     })
 
 })
@@ -65,6 +68,7 @@ exports.findBlog = asyncHandler(async(req,res,next)=>{
     }
 
     blog.read_count = blog.read_count + 1
+    blog.save()
 
     res.status(200).json({
         success:true,
@@ -92,7 +96,8 @@ exports.deleteBlog= asyncHandler(async(req,res,next)=>{
         return next (new ErrorResponse('You are not authorized to delete this blog',401))
     }
 
-    blog.remove()
+    const blogg = await blogModel.findByIdAndDelete(req.params.id)
+    
     res.status(200).json({
         success:true
     })

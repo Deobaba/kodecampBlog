@@ -4,7 +4,7 @@ const editblogValidation = joi.object({
     title: joi.string(),
     description: joi.string(),
     image: joi.string(),
-    body:joi.string(),
+    content:joi.string(),
     tags:joi.string().min(2),
     updatedAt: joi.date().required()
 })

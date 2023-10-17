@@ -1,4 +1,5 @@
 const usermodel = require('../models/user');
+const crypto = require('crypto');
 const asyncHandler = require('../middleware/async');
 const {comparePassword, hashPassword} = require('../utils/authenticationTools');
 const {ErrorResponse,sendResponseToken,sendMail} = require('../utils/index');  // import the ErrorResponse class and sendresposnetoken function
