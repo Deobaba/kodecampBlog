@@ -141,6 +141,8 @@ exports.forgotPassword = asyncHandler(async(req,res,next)=>{
      if (error){
         // Validation failed, return error response
         return res.status(400).json({ success: false, error: error.details });
+        
+        // return next(new ErrorResponse(`${error.details.message}`, 400));
       }
 
     const user = await usermodel.findOne({email})
@@ -194,8 +196,9 @@ exports.resetpassword = asyncHandler(async(req,res,next)=>{
   if(!user){
     return next(new ErrorResponse(`Invalid token`, 400));
   }
-
-  user.password = newPassword
+  
+  const hashedNewPassword = await hashPassword(newPassword)
+  user.password = hashedNewPassword
   user.resetPasswordToken = undefined
   user.resetPasswordExpire= undefined
   user.save()
