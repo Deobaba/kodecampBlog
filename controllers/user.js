@@ -18,6 +18,11 @@ exports.createuser = asyncHandler(async (req, res, next) => {
           }  // if there is an error, return the error message
 
           console.log(req.body)
+        const existingUser = await usermodel.findOne({email:req.body.email})
+
+        if(existingUser){
+            return next(new ErrorResponse("user with this em,ail exist already",404))
+        }
         
         const newPassword = await hashPassword(req.body.password)
 
